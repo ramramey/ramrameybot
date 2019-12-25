@@ -1,4 +1,7 @@
+import socket
 import asyncio
+
+from datetime import datetime
 
 from .apis.twitch import helix
 from .apis.twitch import User, Member
@@ -16,7 +19,7 @@ class RamrameyBot:
                  port: int = 6667,
                  command_prefix: str = "!"):
         # Bot info
-        self._user = ""
+        self._user = user
         self.user: Optional[User] = None
         self.client_id = client_id
         self.token = token
@@ -32,6 +35,10 @@ class RamrameyBot:
         self._users: Dict[int, Union[User, Member]] = {}
 
         self.loop = asyncio.get_event_loop()
+        self.queue = []
+        self.keep_running = True
+
+        self.socket: Optional[socket.socket] = socket.socket()
 
     def run(self):
         self.loop.run_until_complete(self.test())
@@ -42,5 +49,30 @@ class RamrameyBot:
         for user in data:
             print(user.id, user.login, user.display_name, user.offline_image_url)
 
+    async def send_raw(self, data: bytes):
+        self.socket.send(data)
+
+    async def enqueue_message(self, data: bytes):
+        data = data.decode().replace("\r\n", "\n").split("\n")[:-1]
+        self.queue.extend(data)
+
+    async def fetch_queue(self):
+        if self.queue:
+            return self.queue.pop(0)
+
+        await self.enqueue_message(self.socket.recv(2 ** 20))
+        return await self.fetch_queue()
+
+    async def _prepare(self):
+        self.socket.connect((self.host, self.port))
+
     async def _run(self):
+        await self._prepare()
+
+        while self.keep_running:
+            for line in await self.fetch_queue():
+                print(datetime.now().strftime("%Y-%m-%d %T"), line)
+
+            await asyncio.sleep(.01)
+
         return
