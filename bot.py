@@ -1,4 +1,5 @@
 from ramrameybot import Bot
+import json
 
 
 extensions = [
@@ -7,8 +8,7 @@ extensions = [
 ]
 
 client = Bot(
-    user="ramrameybot",
-    client_id="8bz5vv13bu9w5kss68oflvzz3z3ge6",
+    **json.load(open("config.json", "r", encoding="UTF-8")),
     cogs=extensions
 )
 
