@@ -64,12 +64,12 @@ class RamrameyBot:
         data = data.decode().replace("\r\n", "\n").split("\n")[:-1]
         self.queue.extend(data)
 
-    async def fetch_queue(self):
+    async def dequeue_message(self):
         if self.queue:
             return self.queue.pop(0)
 
         await self.enqueue_message(self.socket.recv(2 ** 20))
-        return await self.fetch_queue()
+        return await self.dequeue_message()
 
     async def _prepare(self):
         self.socket.connect((self.host, self.port))
@@ -78,7 +78,7 @@ class RamrameyBot:
         await self._prepare()
 
         while self.keep_running:
-            for line in await self.fetch_queue():
+            for line in await self.dequeue_message():
                 print(datetime.now().strftime("%Y-%m-%d %T"), line)
 
             await asyncio.sleep(.01)
