@@ -14,7 +14,8 @@ class RamrameyBot:
                  cogs,
                  user: str,
                  client_id: str,
-                 token: str = "",
+                 token: str,
+                 api_token: str = "",
                  host: str = "irc.twitch.tv",
                  port: int = 6667,
                  command_prefix: str = "!"):
@@ -23,6 +24,7 @@ class RamrameyBot:
         self.user: Optional[User] = None
         self.client_id = client_id
         self.token = token
+        self.api_token = api_token
         self.command_prefix = command_prefix
 
         # Server info
@@ -76,10 +78,12 @@ class RamrameyBot:
 
     async def _run(self):
         await self._prepare()
+        await self.send_raw("PASS oauth:{}\n".format(self.token).encode())
+        await self.send_raw("NICK {}\n".format(self.user).encode())
 
         while self.keep_running:
-            for line in await self.dequeue_message():
-                print(datetime.now().strftime("%Y-%m-%d %T"), line)
+            data = await self.dequeue_message()
+            print(datetime.now().strftime("%Y-%m-%d %T"), data)
 
             await asyncio.sleep(.01)
 
