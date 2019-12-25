@@ -50,7 +50,15 @@ class RamrameyBot:
             print(user.id, user.login, user.display_name, user.offline_image_url)
 
     async def send_raw(self, data: bytes):
-        self.socket.send(data)
+        """Send raw packet via socket connection"""
+        return self.socket.send(data)
+
+    async def send_msg(self, channel: Union[str, User, Member], data: str):
+        """Send message to a specific channel"""
+        if hasattr(channel, 'login'):  # If User of Member
+            channel: str = channel.login
+
+        await self.send_raw("PRIVMSG #{} :{}\n".format(channel, data).encode())
 
     async def enqueue_message(self, data: bytes):
         data = data.decode().replace("\r\n", "\n").split("\n")[:-1]
