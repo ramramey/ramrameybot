@@ -8,3 +8,15 @@ from typing import Optional, Union
 class Message:
     channel: Optional[Union[str, User]]
     chatter: Optional[Union[str, User, Member]]
+
+    content: str
+    raw: Optional[bytes]
+
+    type: str = "chat"
+
+    def __str__(self):
+        return self.content
+
+    @property
+    def message(self):
+        return self.content

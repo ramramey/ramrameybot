@@ -16,10 +16,10 @@ class Context:
     message: Union[str, Message]
 
     @classmethod
-    async def make_from_message(cls, bot: Any, message: Message, type: str = "chat"):
+    async def make_from_message(cls, bot: Any, message: Message, type: Optional[str] = None):
         return cls(
             bot=bot,
-            type=type,
+            type=type or message.type,
             channel=message.channel,
             chatter=message.chatter,
             message=message
