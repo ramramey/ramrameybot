@@ -6,7 +6,7 @@ from datetime import datetime
 from .apis.twitch import helix
 from .apis.twitch import User, Member
 
-from typing import Dict, Union, Optional
+from typing import Dict, Union, Optional, Any
 
 
 class RamrameyBot:
@@ -36,15 +36,15 @@ class RamrameyBot:
         # Cached objects
         self._users: Dict[int, Union[User, Member]] = {}
 
-        self.loop = asyncio.get_event_loop()
-        self.message_queue = []
+        # Bot implements
         self.keep_running = True
+        self.loop = asyncio.get_event_loop()
 
+        self.message_queue = []
         self.socket: Optional[socket.socket] = socket.socket()
 
-    def run(self):
-        self.loop.run_until_complete(self.test())
-        self.loop.run_until_complete(self._run())
+        self.cogs: Dict[str, Any] = {}
+        self.commands: Dict[str, Any] = {}
 
     async def test(self):
         data = await self.api.GetUsers(client_id=self.client_id).perform(logins=["eunhaklee", "return0927", "ramramey"])
@@ -62,11 +62,13 @@ class RamrameyBot:
 
         await self.send_raw("PRIVMSG #{} :{}\n".format(channel, data).encode())
 
-    async def enqueue_message(self, data: bytes):
+    async def enqueue_message(self, data: bytes) -> None:
+        """Enqueue bytes to messages queue"""
         data = data.decode().replace("\r\n", "\n").split("\n")[:-1]
-        self.message_queue.extend(data)
+        return self.message_queue.extend(data)
 
-    async def dequeue_message(self):
+    async def dequeue_message(self) -> str:
+        """Dequeue one message from messages queue"""
         if self.message_queue:
             return self.message_queue.pop(0)
 
@@ -88,3 +90,7 @@ class RamrameyBot:
             await asyncio.sleep(.01)
 
         return
+
+    def run(self):
+        self.loop.run_until_complete(self.test())
+        self.loop.run_until_complete(self._run())
