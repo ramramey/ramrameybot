@@ -1,5 +1,6 @@
 import aiohttp
 from ramrameybot import Bot
+from ramrameybot.models import command, Command
 
 
 class BasicCommands:
