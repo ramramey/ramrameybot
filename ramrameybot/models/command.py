@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 
 
 class Command:
@@ -20,3 +21,24 @@ def command(name=None, **attrs):
 
     return decorator
 
+
+class Cog:
+    @property
+    def __cog_name__(self) -> str:
+        return self.__class__.__name__
+
+    @classmethod
+    def listener(cls):
+        def decorator(func):
+            actual = func
+
+            if isinstance(actual, staticmethod):
+                actual = actual.__func__
+
+            if not inspect.iscoroutinefunction(actual):
+                raise TypeError("Listener function must be a coroutine")
+
+            actual.__cog_listener__ = True
+
+            return func
+        return decorator
