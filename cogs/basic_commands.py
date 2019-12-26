@@ -68,12 +68,15 @@ class BasicCommands(Cog):
 
         await ctx.reply(", ".join([ctx.bot.command_prefix + v for v in commands.keys()]))
 
+    @Cog.listener()
     async def on_open(self, sock):
         print(" [BC] Bot is ready")
 
+    @Cog.listener()
     async def on_data(self, ctx: Context):
         return print(ctx.user.name, ctx.channel.name, ctx.message.type, ctx.message.message, ctx.message.raw)
 
+    @Cog.listener()
     async def on_error(self, e):
         return print(f"\n\n\n    {repr(e)}\n\n\n")
 
