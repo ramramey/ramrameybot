@@ -2,5 +2,6 @@
   "user": "ramrameybot",
   "client_id": "",
   "token": "",
-  "api_token": ""
+  "api_token": "",
+  "joining_channels": []
 }
