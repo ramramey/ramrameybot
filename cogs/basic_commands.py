@@ -56,7 +56,7 @@ class BasicCommands:
         channel = await API.get_user_by_name(ctx.channel.name)
 
         _data = await API.get_is_channel_followed(channel, user)
-        is_follower = "팔로우 한지 " + API.humanizeTimeDiff(_data) if _data else "아직 팔로우를 안하셨군요 ㅠ,,"
+        is_follower = "팔로우한 지 " + API.humanizeTimeDiff(_data) if _data else "아직 팔로우를 안 하셨군요 ㅠ,,"
 
         await ctx.reply(f"@{ctx.user.name}, {is_follower}")
 
