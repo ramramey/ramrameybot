@@ -16,5 +16,6 @@ for cog in extensions:
 print(" > Extensions", [*client.extensions.keys()])
 print(" > Cogs", [*client.cogs.keys()])
 print(" > Commands", [*client.commands.keys()])
+print(" > Listeners", client.callbacks)
 
 client.run()
