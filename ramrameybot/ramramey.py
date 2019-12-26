@@ -51,6 +51,8 @@ class RamrameyBot:
         for user in data:
             print(user.id, user.login, user.display_name, user.offline_image_url)
 
+    # -------------------------------------------------- #
+    # Socket transaction
     async def send_raw(self, data: bytes):
         """Send raw packet via socket connection"""
         return self.socket.send(data)
@@ -62,6 +64,8 @@ class RamrameyBot:
 
         await self.send_raw("PRIVMSG #{} :{}\n".format(channel, data).encode())
 
+    # -------------------------------------------------- #
+    # Message management
     async def enqueue_message(self, data: bytes) -> None:
         """Enqueue bytes to messages queue"""
         data = data.decode().replace("\r\n", "\n").split("\n")[:-1]
@@ -75,6 +79,8 @@ class RamrameyBot:
         await self.enqueue_message(self.socket.recv(2 ** 20))
         return await self.dequeue_message()
 
+    # -------------------------------------------------- #
+    # Build & Run bot
     async def _prepare(self):
         self.socket.connect((self.host, self.port))
 
