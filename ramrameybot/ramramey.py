@@ -1,17 +1,20 @@
+import sys
 import socket
 import asyncio
+import inspect
+import importlib
 
 from datetime import datetime
 
 from .apis.twitch import helix
 from .apis.twitch import User, Member
+from .models.command import Cog, Command
 
-from typing import Dict, Union, Optional, Any
+from typing import Dict, Union, Optional, Any, List
 
 
 class RamrameyBot:
     def __init__(self,
-                 cogs,
                  user: str,
                  client_id: str,
                  token: str,
@@ -44,7 +47,9 @@ class RamrameyBot:
         self.socket: Optional[socket.socket] = socket.socket()
 
         self.cogs: Dict[str, Any] = {}
+        self.extensions: Dict[str, Any] = {}
         self.commands: Dict[str, Any] = {}
+        self.callbacks: Dict[str, List[Any]] = {}
 
     async def test(self):
         data = await self.api.GetUsers(client_id=self.client_id).perform(logins=["eunhaklee", "return0927", "ramramey"])
@@ -63,6 +68,102 @@ class RamrameyBot:
             channel: str = channel.login
 
         await self.send_raw("PRIVMSG #{} :{}\n".format(channel, data).encode())
+
+    # -------------------------------------------------- #
+    # Extension management
+    def add_cog(self, cog: Cog):
+        if not isinstance(cog, Cog):
+            raise TypeError("A cog must be a Cog")
+
+        members = inspect.getmembers(cog)
+        for name, member in members:
+            if isinstance(member, Command):
+                self.add_command(member, cog)
+
+            if hasattr(member, "__cog_listener__") and getattr(member, "__cog_listener__"):
+                self.add_listener(member)
+
+        self.cogs[cog.__cog_name__] = cog
+
+    def get_cog(self, name: str) -> Cog:
+        return self.cogs.get(name)
+
+    def remove_cog(self, name: str):
+        # TODO: Make this
+        return
+
+    def add_command(self, cmd, parent):
+        """Register a command :class:`Command` into TwitchBot.
+
+        Parameters
+        -----------------
+        cmd
+            The command to add.
+        parent
+
+
+        Raises
+        ---------
+        Exception
+            If the command is already registered
+        TypeError
+            If the passed command is not a subclass of :class:`Command`.
+
+        Returns
+        ---------
+        None
+        """
+        if not isinstance(cmd, Command):
+            raise TypeError("This object was not defined as a subclass of Command")
+
+        for name in cmd.name:
+            if name in self.commands.keys():
+                raise Exception(f"Command {name} was already registered")
+
+            self.commands[name] = [cmd, parent]
+
+    def add_listener(self, func, name=None):
+        """Register a listener event :class:`function`
+
+        Parameters
+        -----------------
+        func
+            The corutine function to process an event.
+        name
+            A specific name of function
+
+        Raises
+        ---------
+        Exception
+            If the command is not a coroutine functinon.
+
+        Returns
+        ---------
+        None
+        """
+        name = func.__name__ if name is None else name
+
+        if not asyncio.iscoroutinefunction(func):
+            raise Exception("Listener must be coroutines")
+
+        if name not in self.callbacks.keys():
+            self.callbacks[name] = []
+
+        self.callbacks[name].append(func)
+
+    def load_extension(self, name):
+        if name in self.extensions:
+            return
+
+        lib = importlib.import_module(name)
+        if not hasattr(lib, 'setup'):
+            del lib
+            del sys.modules[name]
+
+            raise Exception("This module has not to setup.")
+
+        lib.setup(self)
+        self.extensions[name] = lib
 
     # -------------------------------------------------- #
     # Message management
