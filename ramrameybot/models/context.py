@@ -13,7 +13,11 @@ class Context:
     # Chatting data
     channel: Optional[Union[str, User]]
     chatter: Optional[Union[str, User, Member]]
-    message: Union[str, Message]
+    message: Message
+
+    @property
+    def user(self):
+        return self.chatter
 
     @classmethod
     async def make_from_message(cls, bot: Any, message: Message, type: Optional[str] = None):
