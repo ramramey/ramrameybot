@@ -37,7 +37,7 @@ class RamrameyBot:
         self._users: Dict[int, Union[User, Member]] = {}
 
         self.loop = asyncio.get_event_loop()
-        self.queue = []
+        self.message_queue = []
         self.keep_running = True
 
         self.socket: Optional[socket.socket] = socket.socket()
@@ -64,11 +64,11 @@ class RamrameyBot:
 
     async def enqueue_message(self, data: bytes):
         data = data.decode().replace("\r\n", "\n").split("\n")[:-1]
-        self.queue.extend(data)
+        self.message_queue.extend(data)
 
     async def dequeue_message(self):
-        if self.queue:
-            return self.queue.pop(0)
+        if self.message_queue:
+            return self.message_queue.pop(0)
 
         await self.enqueue_message(self.socket.recv(2 ** 20))
         return await self.dequeue_message()
