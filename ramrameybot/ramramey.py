@@ -18,6 +18,7 @@ class RamrameyBot:
                  user: str,
                  client_id: str,
                  token: str,
+                 joining_channels: List[str],
                  api_token: str = "",
                  host: str = "irc.twitch.tv",
                  port: int = 6667,
@@ -50,6 +51,9 @@ class RamrameyBot:
         self.extensions: Dict[str, Any] = {}
         self.commands: Dict[str, Any] = {}
         self.callbacks: Dict[str, List[Any]] = {}
+
+        self.joining_channels = joining_channels
+        self.joined_channels: List[Union[str, User]] = []
 
     async def test(self):
         data = await self.api.GetUsers(client_id=self.client_id).perform(logins=["eunhaklee", "return0927", "ramramey"])
@@ -100,7 +104,7 @@ class RamrameyBot:
         cmd
             The command to add.
         parent
-
+            The Cog containing the command
 
         Raises
         ---------
@@ -189,6 +193,9 @@ class RamrameyBot:
         await self._prepare()
         await self.send_raw("PASS oauth:{}\n".format(self.token).encode())
         await self.send_raw("NICK {}\n".format(self.user).encode())
+
+        for channel in self.joining_channels:
+            await self.send_raw("JOIN #{}\n".format(channel).encode())
 
         while self.keep_running:
             data = await self.dequeue_message()
