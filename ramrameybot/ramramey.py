@@ -181,7 +181,11 @@ class RamrameyBot:
         if self.message_queue:
             return self.message_queue.pop(0)
 
-        await self.enqueue_message(self.socket.recv(2 ** 20))
+        data = None
+        while not data:
+            data = self.socket.recv(2 ** 20)
+
+        await self.enqueue_message(data)
         return await self.dequeue_message()
 
     # -------------------------------------------------- #
