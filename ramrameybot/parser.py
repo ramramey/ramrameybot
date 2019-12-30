@@ -3,9 +3,11 @@ import re
 from .models.message import Message
 from .exceptions import BotException
 
+from typing import Union
+
 
 class ParseError(BotException):
-    def __init__(self, message, raw):
+    def __init__(self, message: str, raw: Union[bytes, str]):
         self.message = message
         self.raw = raw
 
