@@ -5,6 +5,9 @@ import inspect
 import traceback
 import importlib
 
+import colorlog
+import logging
+
 from datetime import datetime
 
 from .apis.twitch import helix
@@ -12,7 +15,7 @@ from .apis.twitch import User, Member
 from .models.command import Cog, Command
 
 from .exceptions import BotException
-from .parser import Parser
+from .parser import Parser, ParseError
 
 from typing import Dict, Union, Optional, Any, List
 
@@ -50,6 +53,25 @@ class RamrameyBot:
         # Bot implements
         self.keep_running = True
         self.loop = asyncio.get_event_loop()
+
+        self.logger = logging.getLogger(getattr(self.__class__, "__name__", "RamrameyBot"))
+        self.logger.setLevel(logging.INFO)
+
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.DEBUG)
+        console_handler.setFormatter(colorlog.ColoredFormatter(
+            "%(log_color)s[%(asctime)s][%(levelname)s][%(name)s: %(filename)s:%(lineno)d] %(message)s%(reset)s",
+            log_colors={
+                "INFO": "green",
+                "WARN": "yellow",
+                "EXCEPTION": "red",
+                "ERROR": "red",
+                "CRITICAL": "red",
+                "NOTSET": "white"
+            },
+            style="%"
+        ))
+        self.logger.addHandler(console_handler)
 
         self.message_queue = []
         self.socket: Optional[socket.socket] = socket.socket()
@@ -214,11 +236,16 @@ class RamrameyBot:
                 # print(datetime.now().strftime("%Y-%m-%d %T"), data)
 
                 mode, meta = self.parser.parse_message(data)
-                print(datetime.now().strftime("%Y-%m-%d %T"), mode, meta)
+                self.logger.info("{} {} {}".format(datetime.now().strftime("%Y-%m-%d %T"), mode, meta))
 
-            except BotException:
-                print(" > Ignoring bot exception")
-                print(traceback.format_exc())
+                if mode == "PONG":  # If PONG response, which would not be created
+                    pass
+                elif mode == "PING":  # If PING request, make PONG response
+                    host = meta.get("host", "tmi.twitch.tv")
+                    await self.send_raw("PONG {}\r\n".format(host).encode())
+
+            except BotException as ex:
+                self.logger.exception(" > Ignoring bot exception> " + str(ex))
 
             finally:
                 await asyncio.sleep(.01)
