@@ -34,5 +34,8 @@ class Parser:
             host, pid, me, message = cls.handshake.findall(data)[0]
             return mode, {"host": host, "pid": pid, "me": me, "message": message}
 
-        raise ParseError
+        raise ParseError(
+            message="Uncatched raw message patterin in bot message parsing",
+            raw=data
+        )
 
