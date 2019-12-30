@@ -198,6 +198,13 @@ class RamrameyBot:
         lib.setup(self)
         self.extensions[name] = lib
 
+    async def call_listener(self, name: str, *args, **kwargs):
+        listeners: list = self.callbacks.get(name, [])
+        self.logger.debug("Calling Listener: Found {} listeners with name {}".format(len(listeners), name))
+
+        for listener in listeners:
+            await listener(*args, **kwargs)
+
     # -------------------------------------------------- #
     # Message management
     async def enqueue_message(self, data: bytes) -> None:
@@ -233,7 +240,8 @@ class RamrameyBot:
         while self.keep_running:
             try:
                 data = await self.dequeue_message()
-                # print(datetime.now().strftime("%Y-%m-%d %T"), data)
+
+                await self.call_listener("on_raw", data)
 
                 mode, meta = self.parser.parse_message(data)
                 self.logger.info("{} {} {}".format(datetime.now().strftime("%Y-%m-%d %T"), mode, meta))
