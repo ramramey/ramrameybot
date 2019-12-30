@@ -1,16 +1,25 @@
-class Debugger:
+from typing import Union
+
+from ramrameybot import Bot
+from ramrameybot.models.command import Cog
+
+
+class Debugger(Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: Bot = bot
         self.sessions = set()
 
-    async def on_error(self, e):
-        print(f"""Error: {repr(e)}
-        Data: {e.data}""")
+    @property
+    def logger(self):
+        return self.bot.logger
 
-    async def on_data(self, raw):
-        if raw.message.type in ["PING"]:
-            print(f"""PING : {raw.message.raw}""")
+    @Cog.listener()
+    async def on_raw(self, data: Union[bytes, str]):
+        if isinstance(data, bytes):
+            data = data.decode()
+
+        return self.logger.debug(" Received RAW > " + data)
 
 
-def setup(bot):
+def setup(bot: Bot):
     bot.add_cog(Debugger(bot))
