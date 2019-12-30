@@ -2,6 +2,7 @@ import sys
 import socket
 import asyncio
 import inspect
+import traceback
 import importlib
 
 from datetime import datetime
@@ -9,6 +10,9 @@ from datetime import datetime
 from .apis.twitch import helix
 from .apis.twitch import User, Member
 from .models.command import Cog, Command
+
+from .exceptions import BotException
+from .parser import Parser
 
 from typing import Dict, Union, Optional, Any, List
 
@@ -39,6 +43,9 @@ class RamrameyBot:
 
         # Cached objects
         self._users: Dict[int, Union[User, Member]] = {}
+
+        # Add parser
+        self.parser = Parser()
 
         # Bot implements
         self.keep_running = True
@@ -202,10 +209,19 @@ class RamrameyBot:
             await self.send_raw("JOIN #{}\n".format(channel).encode())
 
         while self.keep_running:
-            data = await self.dequeue_message()
-            print(datetime.now().strftime("%Y-%m-%d %T"), data)
+            try:
+                data = await self.dequeue_message()
+                # print(datetime.now().strftime("%Y-%m-%d %T"), data)
 
-            await asyncio.sleep(.01)
+                mode, meta = self.parser.parse_message(data)
+                print(datetime.now().strftime("%Y-%m-%d %T"), mode, meta)
+
+            except BotException:
+                print(" > Ignoring bot exception")
+                print(traceback.format_exc())
+
+            finally:
+                await asyncio.sleep(.01)
 
         return
 
