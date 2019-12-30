@@ -35,7 +35,7 @@ class Parser:
             return mode, {"host": host, "pid": pid, "me": me, "message": message}
 
         raise ParseError(
-            message="Uncatched raw message patterin in bot message parsing: `{}`".format(data),
+            message="Uncatched raw message pattern in in bot message parsing: `{}`".format(data),
             raw=data
         )
 
