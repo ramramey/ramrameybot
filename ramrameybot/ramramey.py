@@ -93,7 +93,8 @@ class RamrameyBot:
     # Socket transaction
     async def send_raw(self, data: bytes):
         """Send raw packet via socket connection"""
-        return self.socket.send(data)
+        self.socket.send(data)
+        return await self.call_listener("on_raw", data, is_outgoing=True)
 
     async def send_msg(self, channel: Union[str, User, Member], data: str):
         """Send message to a specific channel"""
