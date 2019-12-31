@@ -250,7 +250,9 @@ class RamrameyBot:
                     pass
                 elif mode == "PING":  # If PING request, make PONG response
                     host = meta.get("host", "tmi.twitch.tv")
-                    await self.send_raw("PONG {}\r\n".format(host).encode())
+                    await self.send_raw("PONG :{}\r\n".format(host).encode())
+                elif mode == "PRIVMSG":
+                    await self.call_listener("on_message", **meta)
 
             except BotException as ex:
                 self.logger.exception(" > Ignoring bot exception> " + str(ex))
