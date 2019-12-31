@@ -82,7 +82,7 @@ class RamrameyBot:
 
         self.cogs: Dict[str, Any] = {}
         self.extensions: Dict[str, Any] = {}
-        self.commands: Dict[str, Any] = {}  # Dict<str> -> Val: List[async func, Cog]
+        self.commands: Dict[str, List[Union[Command, Cog]]] = {}  # Dict<str> -> Val: List[async func, Cog]
         self.callbacks: Dict[str, List[Any]] = {}
 
         self.joining_channels = joining_channels
@@ -255,10 +255,10 @@ class RamrameyBot:
                     profile_image_url="",
                     offline_image_url="",
                 )
+                self._users[login] = [user, datetime.utcfromtimestamp(0)]
             else:
                 user = await self.fetch_user(login)
-
-            self._users[login] = [user, datetime.now()]
+                self._users[login] = [user, datetime.now()]
 
             return user
 
@@ -280,9 +280,15 @@ class RamrameyBot:
 
         command, *args = msg[len(self.command_prefix):].split(" ")
 
-        for cmd, (func, cog) in self.commands.items():
+        for cmd, v in self.commands.items():
             if cmd == command:
-                await func(ctx, *args)
+                func: Command = v[0]
+                cog: Cog = v[1]
+
+                if func.pass_context:
+                    return await func.callback(cog, ctx)
+                else:
+                    return await func.callback(cog)
 
     # -------------------------------------------------- #
     # Build & Run bot
@@ -329,6 +335,7 @@ class RamrameyBot:
                     ctx = Context.make_from_message(bot=self, message=message, type="chat")
 
                     await self.call_listener("on_message", ctx)
+                    await self.process_command(ctx)
 
             except BotException as ex:
                 self.logger.exception(" > Ignoring bot exception> " + str(ex))
