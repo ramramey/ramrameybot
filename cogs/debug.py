@@ -14,11 +14,11 @@ class Debugger(Cog):
         return self.bot.logger
 
     @Cog.listener()
-    async def on_raw(self, data: Union[bytes, str]):
+    async def on_raw(self, data: Union[bytes, str], is_outgoing=False):
         if isinstance(data, bytes):
             data = data.decode()
 
-        return self.logger.debug(" Received RAW > " + data)
+        return self.logger.debug(" {} RAW > {}".format("Outgoing" if is_outgoing else "Received", data))
 
 
 def setup(bot: Bot):
