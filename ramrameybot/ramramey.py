@@ -55,19 +55,20 @@ class RamrameyBot:
         self.loop = asyncio.get_event_loop()
 
         self.logger = logging.getLogger(getattr(self.__class__, "__name__", "RamrameyBot"))
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging.DEBUG)
 
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.DEBUG)
         console_handler.setFormatter(colorlog.ColoredFormatter(
-            "%(log_color)s[%(asctime)s][%(levelname)s][%(name)s: %(filename)s:%(lineno)d] %(message)s%(reset)s",
+            "%(log_color)s[%(asctime)s][%(levelname)s %(filename)s:%(lineno)d] %(message)s%(reset)s",
             log_colors={
                 "INFO": "green",
                 "WARN": "yellow",
                 "EXCEPTION": "red",
                 "ERROR": "red",
                 "CRITICAL": "red",
-                "NOTSET": "white"
+                "NOTSET": "white",
+                "DEBUG": "white"
             },
             style="%"
         ))
