@@ -231,7 +231,7 @@ class RamrameyBot:
 
     # -------------------------------------------------- #
     # Users
-    async def wrap_user(self, login: str) -> User:
+    async def wrap_user(self, login: str, temp_wrap=False) -> User:
         if login in self._users:
             cached_user, updated_time = self._users.get(login)
 
@@ -244,7 +244,20 @@ class RamrameyBot:
             return cached_user
 
         else:
-            user = await self.fetch_user(login)
+            if temp_wrap:
+                user = User(
+                    id=0,
+                    type="",
+                    login=login,
+                    description="",
+                    display_name="",
+                    broadcaster_type="",
+                    profile_image_url="",
+                    offline_image_url="",
+                )
+            else:
+                user = await self.fetch_user(login)
+
             self._users[login] = [user, datetime.now()]
 
             return user
@@ -308,8 +321,8 @@ class RamrameyBot:
                 elif mode == "PRIVMSG":
                     # meta -> user, channel, content
 
-                    user = await self.wrap_user(meta.get("user"))
-                    channel = await self.wrap_user(meta.get("channel"))
+                    user = await self.wrap_user(meta.get("user"), temp_wrap=True)
+                    channel = await self.wrap_user(meta.get("channel"), temp_wrap=True)
                     content = meta.get("content")
 
                     message = Message(channel=channel, chatter=user, content=content, raw=data, type="chat")
