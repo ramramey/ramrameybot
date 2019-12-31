@@ -2,7 +2,6 @@ import aiohttp
 from ramrameybot import Bot
 from ramrameybot.models import command, Command, Context
 from ramrameybot.models.command import Cog
-from ramrameybot import Bot
 
 
 class BasicCommands(Cog):
