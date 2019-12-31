@@ -1,6 +1,7 @@
 from typing import Union
 
 from ramrameybot import Bot
+from ramrameybot.models import Context
 from ramrameybot.models.command import Cog
 
 
@@ -18,7 +19,11 @@ class Debugger(Cog):
         if isinstance(data, bytes):
             data = data.decode()
 
-        return self.logger.debug(" {} RAW > {}".format("Outgoing" if is_outgoing else "Received", data))
+        return self.logger.debug("{} RAW > {}".format("Outgoing" if is_outgoing else "Received", data))
+
+    @Cog.listener()
+    async def on_message(self, ctx: Context):
+        return self.logger.info("CHAT #{} U:{}> {}".format(ctx.channel, ctx.user, ctx.message))
 
 
 def setup(bot: Bot):

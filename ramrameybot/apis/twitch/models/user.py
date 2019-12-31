@@ -60,6 +60,9 @@ class User(TwitchModelBase):
 
         super().__init__()
 
+    def __str__(self):
+        return self.login
+
     @property
     def id(self):
         return self._id

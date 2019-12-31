@@ -20,7 +20,7 @@ class Context:
         return self.chatter
 
     @classmethod
-    async def make_from_message(cls, bot: Any, message: Message, type: Optional[str] = None):
+    def make_from_message(cls, bot: Any, message: Message, type: Optional[str] = None):
         return cls(
             bot=bot,
             type=type or message.type,

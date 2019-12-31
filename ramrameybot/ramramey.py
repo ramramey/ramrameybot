@@ -8,10 +8,11 @@ import importlib
 import colorlog
 import logging
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from .apis.twitch import helix
 from .apis.twitch import User, Member
+from .models import Context, Message
 from .models.command import Cog, Command
 
 from .exceptions import BotException
@@ -21,6 +22,8 @@ from typing import Dict, Union, Optional, Any, List
 
 
 class RamrameyBot:
+    update_interval: int = 60*10  # Seconds
+
     def __init__(self,
                  user: str,
                  client_id: str,
@@ -45,7 +48,7 @@ class RamrameyBot:
         self.api = helix
 
         # Cached objects
-        self._users: Dict[int, Union[User, Member]] = {}
+        self._users: Dict[str, List[Union[User, datetime]]] = {}
 
         # Add parser
         self.parser = Parser()
@@ -55,7 +58,7 @@ class RamrameyBot:
         self.loop = asyncio.get_event_loop()
 
         self.logger = logging.getLogger(getattr(self.__class__, "__name__", "RamrameyBot"))
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.INFO)
 
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.DEBUG)
@@ -79,7 +82,7 @@ class RamrameyBot:
 
         self.cogs: Dict[str, Any] = {}
         self.extensions: Dict[str, Any] = {}
-        self.commands: Dict[str, Any] = {}
+        self.commands: Dict[str, Any] = {}  # Dict<str> -> Val: List[async func, Cog]
         self.callbacks: Dict[str, List[Any]] = {}
 
         self.joining_channels = joining_channels
@@ -227,6 +230,48 @@ class RamrameyBot:
         return await self.dequeue_message()
 
     # -------------------------------------------------- #
+    # Users
+    async def wrap_user(self, login: str) -> User:
+        if login in self._users:
+            cached_user, updated_time = self._users.get(login)
+
+            if updated_time - datetime.now() > timedelta(seconds=self.update_interval):
+                user = await self.fetch_user(login)
+                self._users[login] = [user, datetime.now()]
+
+                return user
+
+            return cached_user
+
+        else:
+            user = await self.fetch_user(login)
+            self._users[login] = [user, datetime.now()]
+
+            return user
+
+    async def fetch_user(self, login: str) -> User:
+        api = self.api.GetUsers(client_id=self.client_id)
+        result = await api.perform(logins=login)
+
+        user = result[0]
+
+        return user
+
+    # -------------------------------------------------- #
+    # Process command
+    async def process_command(self, ctx: Context):
+        msg = ctx.message.content
+
+        if not msg.startswith(self.command_prefix):
+            return
+
+        command, *args = msg[len(self.command_prefix):].split(" ")
+
+        for cmd, (func, cog) in self.commands.items():
+            if cmd == command:
+                await func(ctx, *args)
+
+    # -------------------------------------------------- #
     # Build & Run bot
     async def _prepare(self):
         self.socket.connect((self.host, self.port))
@@ -246,15 +291,31 @@ class RamrameyBot:
                 await self.call_listener("on_raw", data)
 
                 mode, meta = self.parser.parse_message(data)
-                self.logger.info("{} {} {}".format(datetime.now().strftime("%Y-%m-%d %T"), mode, meta))
+                self.logger.debug("{} {} {}".format(datetime.now().strftime("%Y-%m-%d %T"), mode, meta))
 
+                # -------------------- #
+                #      PING / PONG     #
+                # -------------------- #
                 if mode == "PONG":  # If PONG response, which would not be created
                     pass
                 elif mode == "PING":  # If PING request, make PONG response
                     host = meta.get("host", "tmi.twitch.tv")
                     await self.send_raw("PONG :{}\r\n".format(host).encode())
+
+                # -------------------- #
+                #        PRIVMSG       #
+                # -------------------- #
                 elif mode == "PRIVMSG":
-                    await self.call_listener("on_message", **meta)
+                    # meta -> user, channel, content
+
+                    user = await self.wrap_user(meta.get("user"))
+                    channel = await self.wrap_user(meta.get("channel"))
+                    content = meta.get("content")
+
+                    message = Message(channel=channel, chatter=user, content=content, raw=data, type="chat")
+                    ctx = Context.make_from_message(bot=self, message=message, type="chat")
+
+                    await self.call_listener("on_message", ctx)
 
             except BotException as ex:
                 self.logger.exception(" > Ignoring bot exception> " + str(ex))

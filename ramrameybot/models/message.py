@@ -10,7 +10,7 @@ class Message:
     chatter: Optional[Union[str, User, Member]]
 
     content: str
-    raw: Optional[bytes]
+    raw: Optional[Union[str, bytes]]
 
     type: str = "chat"
 
