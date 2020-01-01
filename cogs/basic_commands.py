@@ -1,7 +1,7 @@
 import aiohttp
 import sqlite3
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from ramrameybot import Bot
 from ramrameybot.models import command, Command, Context
@@ -55,69 +55,35 @@ class BasicCommands(Cog):
     async def c_boyfriend(self, ctx: Context):
         await ctx.reply("난 트수가 있는데 어떡해,,,")
 
-    @command(['uptime', '업타임'], pass_context=True)
-    async def uptime(self, ctx: Context, *_):
-        user = await self.bot.wrap_user(ctx.channel.login)
-        print(user.display_name, user.login, user.id)
+    # ----------------------------------- #
+    # Update 2020.1.1.
+    @command(["생일", "생신"], pass_context=True)
+    async def c_birthday(self, ctx: Context):
+        await ctx.reply("11.30")
 
-        api = self.bot.api.GetStreams(client_id=self.bot.client_id)
-        result = await api.perform(ids=user.id)
-        self.bot.logger.critical(result)
-        stream = result[0]
-        delta = datetime.now() - stream.started_at
-        await ctx.reply(f"업타임: {delta}")
-
-    @command(['title', '방제'], pass_context=True)
-    async def title(self, ctx: Context, *_):
-        API = ctx.bot.APIHandler
-
-        user = await API.get_user_by_name(ctx.channel.name)
-        stream = await API.get_stream(user.tid)
-        if stream:
-            await ctx.reply(f"방제: {stream['title']}")
-        else:
-            await ctx.reply("방송중이 아닙니다.")
-
-    @command(['game', '게임'], pass_context=True)
-    async def game(self, ctx: Context, *_):
-        API = ctx.bot.APIHandler
-
-        user = await API.get_user_by_name(ctx.channel.name)
-        stream = await API.get_stream(user.tid)
-        if stream:
-            await ctx.reply(f"게임: {stream['game']}")
-        else:
-            await ctx.reply("방송중이 아닙니다.")
-
+    # ----------------------------------- #
+    # Global commands
     @command(['follow', '팔로우'], pass_context=True)
-    async def information(self, ctx, *_):
-        API = ctx.bot.APIHandler
+    async def c_follow(self, ctx: Context, *_):
+        user = await self.bot.wrap_user(ctx.user.login)
+        channel = await self.bot.wrap_user(ctx.channel.login)
 
-        user = await API.get_user_by_name(ctx.user.name)
-        channel = await API.get_user_by_name(ctx.channel.name)
+        api = self.bot.api.GetUserFollows(client_id=self.bot.client_id)
+        total, token, data = await api.perform(user.id, channel.id)
 
-        _data = await API.get_is_channel_followed(channel, user)
-        is_follower = "팔로우한 지 " + API.humanizeTimeDiff(_data) if _data else "아직 팔로우를 안 하셨군요 ㅠ,,"
+        if not data:  # 팔로우하지 않은 경우
+            return await ctx.reply("@{} 팔로우 안해놓고 느낌표팔로우 흐지 므르,,,,".format(user.login))
 
-        await ctx.reply(f"@{ctx.user.name}, {is_follower}")
+        assert len(data), 1
 
-    @command(['commands', '커맨드'], pass_context=True)
+        date = data[-1]["followed_at"] + timedelta(hours=9)
+        return await ctx.reply("@{} 님이 팔로우: {}".format(user.display_name, date.strftime("%Y-%m-%d %T")))
+
+    @command(['commands', '커맨드', '명령어'], pass_context=True)
     async def commands(self, ctx: Context, *_):
         commands = ctx.bot.commands
 
-        await ctx.reply(", ".join([ctx.bot.command_prefix + v for v in commands.keys()]))
-
-    @Cog.listener()
-    async def on_open(self, sock):
-        print(" [BC] Bot is ready")
-
-    @Cog.listener()
-    async def on_data(self, ctx: Context):
-        return print(ctx.user.name, ctx.channel.name, ctx.message.type, ctx.message.message, ctx.message.raw)
-
-    @Cog.listener()
-    async def on_error(self, e):
-        return print(f"\n\n\n    {repr(e)}\n\n\n")
+        await ctx.reply(" / ".join([ctx.bot.command_prefix + v for v in commands.keys()]))
 
 
 def setup(bot: Bot):
