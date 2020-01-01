@@ -58,7 +58,7 @@ class RamrameyBot:
         self.loop = asyncio.get_event_loop()
 
         self.logger = logging.getLogger(getattr(self.__class__, "__name__", "RamrameyBot"))
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging.DEBUG)
 
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.DEBUG)
@@ -234,8 +234,10 @@ class RamrameyBot:
     async def wrap_user(self, login: str, temp_wrap=False) -> User:
         if login in self._users:
             cached_user, updated_time = self._users.get(login)
+            self.logger.debug("Cached User " + login + " with cached time " + str(updated_time))
 
-            if updated_time - datetime.now() > timedelta(seconds=self.update_interval):
+            if datetime.now() - updated_time > timedelta(seconds=self.update_interval) and not temp_wrap:
+                self.logger.debug("Refreshing cache of user " + login)
                 user = await self.fetch_user(login)
                 self._users[login] = [user, datetime.now()]
 
