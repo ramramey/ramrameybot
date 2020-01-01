@@ -43,6 +43,18 @@ class BasicCommands(Cog):
     async def c_crying_ramram(self, ctx: Context):
         await ctx.reply("람람 또 우럭?")
 
+    @command(["방바닥"], pass_context=True)
+    async def c_ground(self, ctx: Context):
+        await ctx.reply("쓰레기땜에 안보임")
+
+    @command(["양심"], pass_context=True)
+    async def c_mind(self, ctx: Context):
+        await ctx.reply("마려워서 싸고옴ㅠ")
+
+    @command(["남친", "남자친구"], pass_context=True)
+    async def c_boyfriend(self, ctx: Context):
+        await ctx.reply("난 트수가 있는데 어떡해,,,")
+
     @command(['uptime', '업타임'], pass_context=True)
     async def uptime(self, ctx: Context, *_):
         user = await self.bot.wrap_user(ctx.channel.login)
