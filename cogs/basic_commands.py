@@ -1,4 +1,8 @@
 import aiohttp
+import sqlite3
+
+from datetime import datetime
+
 from ramrameybot import Bot
 from ramrameybot.models import command, Command, Context
 from ramrameybot.models.command import Cog
@@ -9,14 +13,47 @@ class BasicCommands(Cog):
         self.bot: Bot = bot
         self.session = set()
 
+        self.db = sqlite3.connect("")
+
+    @command(['키'], pass_context=True)
+    async def c_height(self, ctx: Context):
+        await ctx.reply("156 / 람람피셜 179")
+
+    @command(["몸무게"], pass_context=True)
+    async def c_weight(self, ctx: Context):
+        await ctx.reply("47g")
+
+    @command(["학교"], pass_context=True)
+    async def c_school(self, ctx: Context):
+        await ctx.reply("대학교")
+
+    @command(["대학교", '본명'], pass_context=True)
+    async def c_seiled(self, ctx: Context):
+        await ctx.reply("쉿")
+
+    @command(["이름"], pass_context=True)
+    async def c_name(self, ctx: Context):
+        await ctx.reply("람람이")
+
+    @command(["나이"], pass_context=True)
+    async def c_age(self, ctx: Context):
+        await ctx.reply("88년생 21세")
+
+    @command(["즙", "즙즙백과"], pass_context=True)
+    async def c_crying_ramram(self, ctx: Context):
+        await ctx.reply("람람 또 우럭?")
+
     @command(['uptime', '업타임'], pass_context=True)
     async def uptime(self, ctx: Context, *_):
-        bot = ctx.bot
-        API = bot.APIHandler
+        user = await self.bot.wrap_user(ctx.channel.login)
+        print(user.display_name, user.login, user.id)
 
-        user = await API.get_user_by_name(ctx.channel.name)
-        uptime = await API.get_uptime(user.tid)
-        await ctx.reply(f"업타임: {uptime}")
+        api = self.bot.api.GetStreams(client_id=self.bot.client_id)
+        result = await api.perform(ids=user.id)
+        self.bot.logger.critical(result)
+        stream = result[0]
+        delta = datetime.now() - stream.started_at
+        await ctx.reply(f"업타임: {delta}")
 
     @command(['title', '방제'], pass_context=True)
     async def title(self, ctx: Context, *_):
@@ -39,15 +76,6 @@ class BasicCommands(Cog):
             await ctx.reply(f"게임: {stream['game']}")
         else:
             await ctx.reply("방송중이 아닙니다.")
-
-    # @command(['enak', 'enakbot'], pass_context=True)
-    async def enak_eng(self, ctx: Context, *_):
-        await ctx.reply(f"{ctx.user.name} EnakBot is Twitch-Discord crossplatform chatbot operated & developed by @return0927 (Eunhak Lee).")
-
-
-    # @command(['으낙', '으낙봇'], pass_context=True)
-    async def enakbot(self, ctx: Context, *_):
-        await ctx.reply(f"@{ctx.user.name} 으낙봇은 트수 @return0927 (이은학)이 개발/운영하는 트위치-디스코드 크로스플랫폼 챗봇입니다.")
 
     @command(['follow', '팔로우'], pass_context=True)
     async def information(self, ctx, *_):
