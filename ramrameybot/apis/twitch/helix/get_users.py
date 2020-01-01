@@ -1,6 +1,8 @@
 from .base import ApiBase
 from .. import User
 
+from .tools.id_and_logins import IdLoginParser
+
 from typing import Union, List
 
 
@@ -10,36 +12,12 @@ class GetUsers(ApiBase):
     auth_require = {"client_id"}
     parameters = {"id", "login"}
 
-    @classmethod
-    def _make_user_id(cls, obj: Union[int, str, User, List[Union[int, str, User]]]) -> list:
-        if obj is None:
-            return []
-        elif isinstance(obj, User):
-            return [obj.id]
-        elif isinstance(obj, list):
-            return [cls._make_user_id(x)[0] for x in obj]
-        elif isinstance(obj, int):
-            return [str(obj)]
-        else:
-            return obj
-
-    @classmethod
-    def _make_user_login(cls, obj: Union[str, User]) -> list:
-        if obj is None:
-            return []
-        elif isinstance(obj, User):
-            return [obj.login]
-        elif isinstance(obj, list):
-            return [cls._make_user_login(x)[0] for x in obj]
-        else:
-            return [obj]
-
     async def perform(self,
                       ids: Union[int, str, User, List[Union[int, str, User]]] = None,
                       logins: Union[str, User, List[Union[str, User]]] = None,
                       ):
-        ids = [('id', x) for x in self._make_user_id(ids)]
-        logins = [('login', x) for x in self._make_user_login(logins)]
+        ids = [('id', x) for x in IdLoginParser.make_user_id(ids)]
+        logins = [('login', x) for x in IdLoginParser.make_user_login(logins)]
 
         data = await self.perform_get(ids + logins)
 
