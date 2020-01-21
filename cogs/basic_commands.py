@@ -62,6 +62,12 @@ class BasicCommands(Cog):
         await ctx.reply("11.30")
 
     # ----------------------------------- #
+    # Update 2020.1.20.
+    @command(["사양", "컴퓨터", "스펙"], pass_context=True)
+    async def c_pc(self, ctx: Context):
+        await ctx.reply("@"+ctx.user.login + " AMD R5 3600 / 16GB / SSD 512G / 이엠텍 RTX2060 STORM / 자세한건 https://tgd.kr/35191322")
+
+    # ----------------------------------- #
     # Global commands
     @command(['follow', '팔로우'], pass_context=True)
     async def c_follow(self, ctx: Context, *_):
