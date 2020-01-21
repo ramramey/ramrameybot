@@ -288,9 +288,12 @@ class RamrameyBot:
                 cog: Cog = v[1]
 
                 if func.pass_context:
-                    return await func.callback(cog, ctx)
+                    await func.callback(cog, ctx)
                 else:
-                    return await func.callback(cog)
+                    await func.callback(cog)
+
+                time_taken = datetime.now() - ctx.message.enqueued_time
+                self.logger.debug("Func `{}` took `{}`ms".format(func.name, time_taken))
 
     # -------------------------------------------------- #
     # Build & Run bot
@@ -308,6 +311,7 @@ class RamrameyBot:
         while self.keep_running:
             try:
                 data = await self.dequeue_message()
+                start = datetime.now()
 
                 await self.call_listener("on_raw", data)
 
@@ -333,11 +337,15 @@ class RamrameyBot:
                     channel = await self.wrap_user(meta.get("channel"), temp_wrap=True)
                     content = meta.get("content")
 
-                    message = Message(channel=channel, chatter=user, content=content, raw=data, type="chat")
+                    message = Message(channel=channel, chatter=user,
+                                      content=content, raw=data,
+                                      type="chat", enqueued_time=datetime.now())
                     ctx = Context.make_from_message(bot=self, message=message, type="chat")
 
                     await self.call_listener("on_message", ctx)
                     await self.process_command(ctx)
+
+                    self.logger.debug("Message `{}` took {} on process".format(mode, datetime.now() - start))
 
             except BotException as ex:
                 self.logger.exception(" > Ignoring bot exception> " + str(ex))

@@ -1,5 +1,6 @@
 import aiohttp
 from urllib.parse import urlencode
+from datetime import datetime
 
 from typing import Optional, List, Tuple
 
@@ -37,8 +38,14 @@ class ApiBase:
 
     async def perform_get(self, parameters):
         """Perform HTTP GET with headers"""
+
+        start = datetime.now()
+        print(start.strftime("%Y-%m-%d %T"), "Performing Twitch API Helix: route " + self.url)
         async with aiohttp.ClientSession(headers=self.headers) as sess:
             async with sess.get(self.url + "?" + urlencode(parameters)) as resp:
-                return await resp.json()
+                data = await resp.json()
+                print(datetime.now().strftime("%Y-%m-%d %T"),
+                      "Closing Twitch API Helix: route " + self.url + " (took {}ms)".format((datetime.now() - start).total_seconds() * 1000))
+                return data
 
     # TODO: Make function perform_put
