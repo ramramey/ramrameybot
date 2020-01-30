@@ -37,7 +37,7 @@ class BasicCommands(Cog):
 
     @command(["나이"], pass_context=True)
     async def c_age(self, ctx: Context):
-        await ctx.reply("88년생 21세")
+        await ctx.reply("22세 (람람피셜) / 88년생 (트수피셜)")
 
     @command(["즙", "즙즙백과"], pass_context=True)
     async def c_crying_ramram(self, ctx: Context):
