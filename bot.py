@@ -4,6 +4,7 @@ import json
 
 extensions = [
     "cogs.basic_commands",
+    "cogs.minecraft",
     "cogs.debug"
 ]
 
