@@ -89,7 +89,8 @@ class RamrameyBot:
         self.joined_channels: List[Union[str, User]] = []
 
     async def test(self):
-        data = await self.api.GetUsers(client_id=self.client_id).perform(logins=["eunhaklee", "return0927", "ramramey"])
+        data = await self.api.GetUsers(client_id=self.client_id, authorization=self.api_token)\
+            .perform(logins=["eunhaklee", "return0927", "ramramey"])
         for user in data:
             print(user.id, user.login, user.display_name, user.offline_image_url)
 
@@ -265,7 +266,7 @@ class RamrameyBot:
             return user
 
     async def fetch_user(self, login: str) -> User:
-        api = self.api.GetUsers(client_id=self.client_id)
+        api = self.api.GetUsers(client_id=self.client_id, authorization=self.api_token)
         result = await api.perform(logins=login)
 
         user = result[0]

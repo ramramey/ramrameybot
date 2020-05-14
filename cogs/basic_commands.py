@@ -74,7 +74,7 @@ class BasicCommands(Cog):
         user = await self.bot.wrap_user(ctx.user.login)
         channel = await self.bot.wrap_user(ctx.channel.login)
 
-        api = self.bot.api.GetUserFollows(client_id=self.bot.client_id)
+        api = self.bot.api.GetUserFollows(client_id=self.bot.client_id, authorization=self.bot.api_token)
         total, token, data = await api.perform(user.id, channel.id)
 
         if not data:  # 팔로우하지 않은 경우

@@ -9,7 +9,6 @@ from typing import Union, List
 class GetUsers(ApiBase):
     url: str = ApiBase.url + "users"
 
-    auth_require = {"client_id"}
     parameters = {"id", "login"}
 
     async def perform(self,

@@ -15,6 +15,9 @@ class ApiBase:
     # Query string parameters
     parameters = {""}
     scopes = {""}
+    auth_require = {"client_id", "authorization"}  # Now all API requires Access token
+
+    last_response = None
 
     def __init__(self,
                  authorization: Optional[str] = None,
@@ -43,6 +46,7 @@ class ApiBase:
         print(start.strftime("%Y-%m-%d %T"), "Performing Twitch API Helix: route " + self.url)
         async with aiohttp.ClientSession(headers=self.headers) as sess:
             async with sess.get(self.url + "?" + urlencode(parameters)) as resp:
+                self.last_response = resp
                 data = await resp.json()
                 print(datetime.now().strftime("%Y-%m-%d %T"),
                       "Closing Twitch API Helix: route " + self.url + " (took {}ms)".format((datetime.now() - start).total_seconds() * 1000))
