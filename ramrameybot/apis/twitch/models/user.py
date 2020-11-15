@@ -39,6 +39,7 @@ class User(TwitchModelBase):
                  profile_image_url: str,
                  offline_image_url: str,
                  view_count: int = 0,
+                 created_at: str = "",
                  email: Optional[str] = None):
         # Required
         self._id = int(id)
